@@ -1,0 +1,222 @@
+---
+title: "Rep-RepAnalysis (Bayesian Approach)"
+author: "Ikehara"
+date: "4/14/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+####LOAD DATA
+library(dplyr)
+library( BayesFactor)
+library( tidyverse)
+library(lsr)
+
+predata <- read.table("/Users/adam/Desktop/PREDATA3.txt", header=TRUE, sep = ",", stringsAsFactors=TRUE)
+
+postdata <- read.table("/Users/adam/Desktop/POSTDATA3.txt", header = TRUE, sep = ",",
+stringsAsFactors = TRUE)
+
+#Wide to long 
+predatacol = predata %>% gather("Eqns", "FBD", "Graphs","Words", key = Representation, value = Answer)
+postdatacol = postdata%>% gather("Eqns", "FBD", "Graphs","Words", key = Representation, value = Answer)
+
+
+#str(predatacol)
+#summary(predatacol)
+
+#str(postdatacol)
+#summary(postdatacol)
+```
+
+```{r setup, include=FALSE}
+###CHI SQUARE TEST OF ASSOCIATION
+predatacol %>%
+  mutate(Representation = as.factor(Representation),
+         Answer  = as.factor(Answer)) -> predatacol
+
+postdatacol %>%
+  mutate(Representation = as.factor(Representation),
+         Answer  = as.factor(Answer)) -> postdatacol
+
+#summary(predatacol)
+#summary(postdatacol)
+
+precrosstab <- xtabs(~Representation+Answer, data = predatacol)
+postcrosstab <-xtabs(~Representation+Answer, data = postdatacol)
+                     
+preasstest <- associationTest( formula= ~Representation+Answer, data = predatacol)
+postasstest <- associationTest( formula= ~Representation+Answer, data = postdatacol)
+
+```
+
+```{r setup, include=FALSE}
+###BAYES ANALYSIS
+preBF <- contingencyTableBF(precrosstab, sampleType = "indepMulti", fixedMargin = "rows") 
+postBF <- contingencyTableBF(postcrosstab, sampleType = "indepMulti", fixedMargin = "rows")
+
+preBF
+postBF
+
+```
+
+```{r setup, include=FALSE}
+###PAIRED CONTINGENCY TABLES
+
+
+#Graphs-Rep Contingency
+GFxtab<- xtabs(~Graphs+FBD, data = predata)
+GExtab<- xtabs(~Graphs+Eqns, data = predata)
+GWxtab<- xtabs(~Graphs+Words, data = predata)
+
+postGFxtab<- xtabs(~Graphs+FBD, data = postdata)
+postGExtab<- xtabs(~Graphs+Eqns, data = postdata)
+postGWxtab<- xtabs(~Graphs+Words, data = postdata)
+
+#FBD - Rep Contingency
+FGxtab<-xtabs(~FBD+Graphs, data = predata)
+FExtab<-xtabs(~FBD+Eqns, data = predata)
+FWxtab<-xtabs(~FBD+Words, data = predata)
+
+postFGxtab<-xtabs(~Graphs+FBD,data = postdata)
+postFExtab<-xtabs(~FBD+Eqns, data = postdata)
+postFWxtab<-xtabs(~FBD+Words, data = postdata)
+
+#Words - Rep Contingency
+WFxtab<-xtabs(~Words+FBD, data = predata)
+WGxtab<-xtabs(~Words+Graphs, data = predata)
+WExtab<-xtabs(~Words+Eqns, data = predata)
+
+postWFxtab<-xtabs(~Words+FBD, data = postdata)
+postWGxtab<-xtabs(~Words+Graphs, data = postdata)
+postWExtab<-xtabs(~Words+Eqns, data = postdata)
+
+#Eqns - Rep Contingency
+EWxtab<-xtabs(~Eqns+Words, data = predata)
+EFxtab<-xtabs(~Eqns+FBD, data = predata)
+EGxtab<-xtabs(~Eqns+Graphs, data = predata)
+
+postEWxtab<-xtabs(~Eqns+Words, data = postdata)
+postEFxtab<-xtabs(~Eqns+FBD, data = postdata)
+postEGxtab<-xtabs(~Eqns+Graphs, data = postdata)
+
+#PropTables
+GFP<- prop.table(GFxtab)
+GEP<- prop.table(GExtab)
+GWP<- prop.table(GWxtab)
+FGP<- prop.table(FGxtab)
+FEP<- prop.table(FExtab)
+FWP<- prop.table(FWxtab)
+WFP<- prop.table(WFxtab)
+WGP<- prop.table(WGxtab)
+WEP<- prop.table(WExtab)
+EWP<- prop.table(EWxtab)
+EFP<- prop.table(EFxtab)
+EGP<- prop.table(EGxtab)
+
+
+pGFP <- prop.table(postGFxtab)
+pGEP <- prop.table(postGExtab)
+pGWP <- prop.table(postGWxtab)
+pFEP <- prop.table(postFExtab)
+pFWP <- prop.table(postFWxtab)
+pWEP <- prop.table(postWExtab)
+
+
+
+
+PreProbList <- list(GFP, GEP, GWP, FGP, FEP, FWP, WFP, WGP, WEP, EWP, EFP, EGP)
+PostProbList <- list(pGFP, pGEP, pGWP, pFEP, pFWP, pWEP)
+
+
+#GFP
+#GEP
+#GWP
+
+#FGP
+#FEP
+#FWP
+
+#WFP
+#WGP
+#WEP
+
+#EWP
+#EFP
+#EGP
+
+#PostProbList
+```
+
+```{r setup, include=FALSE}
+##paired BFA
+GFBF <- contingencyTableBF(GFxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+GEBF <- contingencyTableBF(GExtab, sampleType = "indepMulti", fixedMargin = "rows")
+GWBF <- contingencyTableBF(GWxtab, sampleType = "indepMulti", fixedMargin = "rows")
+
+FGBF <- contingencyTableBF(FGxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+FEBF <- contingencyTableBF(FExtab, sampleType = "indepMulti", fixedMargin = "rows") 
+FWBF <- contingencyTableBF(FWxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+  
+WFBF <- contingencyTableBF(WFxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+WGBF <- contingencyTableBF(WGxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+WEBF <- contingencyTableBF(WExtab, sampleType = "indepMulti", fixedMargin = "rows") 
+  
+EFBF <- contingencyTableBF(EFxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+EGBF <- contingencyTableBF(EGxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+EWBF <- contingencyTableBF(EWxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+
+
+pGFBF <- contingencyTableBF(postGFxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pGEBF <- contingencyTableBF(postGExtab, sampleType = "indepMulti", fixedMargin = "rows")
+pGWBF <- contingencyTableBF(postGWxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pFEBF <- contingencyTableBF(postFExtab, sampleType = "indepMulti", fixedMargin = "rows")
+pFWBF <- contingencyTableBF(postFWxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pWEBF <- contingencyTableBF(postWExtab, sampleType = "indepMulti", fixedMargin = "rows")
+
+pFGBF <- contingencyTableBF(postFGxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pEGBF <- contingencyTableBF(postEGxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pWGBF <- contingencyTableBF(postWGxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pEFBF <- contingencyTableBF(postEFxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pWFBF <- contingencyTableBF(postWFxtab, sampleType = "indepMulti", fixedMargin = "rows")
+pEWBF <- contingencyTableBF(postEWxtab, sampleType = "indepMulti", fixedMargin = "rows")
+
+
+PreBFList <- list(GFBF, GEBF, GWBF,FGBF, FEBF, FWBF,EGBF, EFBF, EWBF, WGBF, WFBF, WEBF)
+PostBFList <- list(pGFBF, pGEBF, pGWBF,pFGBF, pFEBF, pFWBF,pEGBF,pEFBF,pEWBF,pWGBF,pWFBF, pWEBF)
+
+
+
+```
+
+
+```{r setup, include=FALSE}
+#This is REP REP where the c/i is the factor
+
+pretestdat <- read.table("/Users/adam/Desktop/REPREPTEST.csv", header=TRUE, sep = ",", stringsAsFactors=TRUE)
+
+
+b <- xtabs(~Correct+Incorrect, pretestdat)
+
+contingencyTableBF(b, sampleType ="poisson")
+```
+
+```{r setup, include=FALSE}
+#BF for FEW, FEG, EWG, FGW
+
+FEW <- predatacol[!grepl("Graphs", postdatacol$Representation),]
+postdatacol  %>% filter(!grepl('Graphs', Representation)) -> FEWP
+FEG <- predatacol[!grepl("Words", postdatacol$Representation),]
+EWG <- predatacol[!grepl("FBD", postdatacol$Representation),]
+FGW <- predatacol[!grepl("Eqns", postdatacol$Representation),]
+
+FEWxtab <- xtabs(~Representation+Answer, data = FEW)
+FEGxtab <- xtabs(~Representation+Answer, data = FEG)
+EWGxtab <- xtabs(~Representation+Answer, data = EWG)
+FGWxtab <- xtabs(~Representation+Answer, data = FGW)
+
+FEWBF <- contingencyTableBF(FEWxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+FEGBF <- contingencyTableBF(FEGxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+EWGBF <- contingencyTableBF(EWGxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+FGWBF <- contingencyTableBF(FGWxtab, sampleType = "indepMulti", fixedMargin = "rows") 
+```
